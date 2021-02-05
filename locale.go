@@ -2,7 +2,7 @@
  * locale.go - locale
  *
  * godec128 - go dec64 (for 64-bit decimal fixed point) library
- * Copyright (C) 2020  Mateusz Szpakowski
+ * Copyright (C) 2021  Mateusz Szpakowski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
