@@ -24,6 +24,7 @@ package godec64
 
 import (
     "bytes"
+    "math"
     "math/bits"
     "strconv"
     "strings"
@@ -435,4 +436,39 @@ func ParseUDec64Bytes(str []byte, precision uint, rounding bool) (UDec64, error)
         return UDec64(clo), nil
     }
     return 0, nil
+}
+
+var float64_revpowers []float64 = []float64{
+    1,
+    0.1,
+    0.01,
+    0.001,
+    0.0001,
+    0.00001,
+    0.000001,
+    0.0000001,
+    0.00000001,
+    0.000000001,
+    0.0000000001,
+    0.00000000001,
+    0.000000000001,
+    0.0000000000001,
+    0.00000000000001,
+    0.000000000000001,
+    0.0000000000000001,
+    0.00000000000000001,
+    0.000000000000000001,
+}
+
+// convert to float64
+func (a UDec64) ToFloat64(precision uint) float64 {
+    return float64(a)*float64_revpowers[precision]
+}
+
+// convert float64 to UDec128
+func Float64ToUDec64(a float64, precision uint) (UDec64, error) {
+    if math.IsNaN(a) || a >= 18446744073709551616.0 || a < 0.0 {
+        return 0, strconv.ErrRange
+    }
+    return UDec64(float64(a)*float64(uint64_powers[precision])), nil
 }
