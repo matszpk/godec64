@@ -23,6 +23,7 @@
 package godec64
  
 import (
+    "strconv"
     "testing"
 )
 
@@ -112,6 +113,86 @@ func TestUDec64Format(t *testing.T) {
         }
         if tc.a!=a {
             t.Errorf("Argument has been modified: %d: %v!=%v", i, a, tc.a)
+        }
+    }
+}
+
+type UDec64ParseTC struct {
+    str string
+    precision uint
+    rounding bool
+    expected UDec64
+    expError error
+}
+
+func TestUDec64Parse(t *testing.T) {
+    testCases := []UDec64ParseTC {
+        UDec64ParseTC{ "425.143693331510191", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "425.1436933315101915", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "425.143693331510191999", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "425.1436933315101915", 15, true, 425143693331510192, nil },
+        UDec64ParseTC{ "425.1436933315101", 15, false, 425143693331510100, nil },
+        UDec64ParseTC{ "4592112", 10, false, 45921120000000000, nil },
+        UDec64ParseTC{ "18446744073709551616", 11, false, 0, strconv.ErrRange },
+        UDec64ParseTC{ "0.001984593924556", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ ".0019845939245565", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ ".0019845939245565", 15, true, 1984593924557, nil },
+        UDec64ParseTC{ "0.001984593924560", 15, false, 1984593924560, nil },
+        UDec64ParseTC{ ".001984593924560", 15, false, 1984593924560, nil },
+        UDec64ParseTC{ "0.00198459392456", 15, false, 1984593924560, nil },
+        UDec64ParseTC{ ".00198459392456", 15, false, 1984593924560, nil },
+        UDec64ParseTC{ ".001984593924", 15, false, 1984593924000, nil },
+        UDec64ParseTC{ "0.201984593924556", 15, false, 201984593924556, nil },
+        UDec64ParseTC{ ".30198459392456", 15, false, 301984593924560, nil },
+        UDec64ParseTC{ "0.0", 10, false, 0, nil },
+        UDec64ParseTC{ "0", 10, false, 0, nil },
+        UDec64ParseTC{ "0.", 10, false, 0, nil },
+        UDec64ParseTC{ ".0", 10, false, 0, nil },
+        UDec64ParseTC{ "425.143693331510191e0", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "42.5143693331510191e1", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "42.5143693331510191ee1", 15, false, 0, strconv.ErrSyntax },
+        UDec64ParseTC{ "4.25143693331510191e2", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "244.194251436933315e5", 10, false, 244194251436933315, nil },
+        UDec64ParseTC{ "4251.43693331510191e-1", 15, false, 425143693331510191, nil },
+        UDec64ParseTC{ "425143693.331510190e-6", 15, false, 425143693331510190, nil },
+        UDec64ParseTC{ "0.01984593924556e-1", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ ".01984593924556e-1", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ "0.1984593924556e-2", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ "00.1984593924556e-2", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ ".1984593924556e-2", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ "1.984593924556e-3", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ "12e3", 15, false, 12000000000000000000, nil },
+        UDec64ParseTC{ "12.e3", 15, false, 12000000000000000000, nil },
+        UDec64ParseTC{ "12.77e3", 15, false, 12770000000000000000, nil },
+        UDec64ParseTC{ "0.0e0", 10, false, 0, nil },
+        UDec64ParseTC{ "0.0e1", 10, false, 0, nil },
+        UDec64ParseTC{ ".0e1", 10, false, 0, nil },
+        UDec64ParseTC{ "0.e1", 10, false, 0, nil },
+        UDec64ParseTC{ "0.0e3", 10, false, 0, nil },
+        UDec64ParseTC{ ".0e3", 10, false, 0, nil },
+        UDec64ParseTC{ "0.e3", 10, false, 0, nil },
+        UDec64ParseTC{ "0.0e-1", 10, false, 0, nil },
+        UDec64ParseTC{ ".0e-1", 10, false, 0, nil },
+        UDec64ParseTC{ "0.e-1", 10, false, 0, nil },
+        UDec64ParseTC{ "0.0e-3", 10, false, 0, nil },
+        UDec64ParseTC{ ".0e-3", 10, false, 0, nil },
+        UDec64ParseTC{ "0.e-3", 10, false, 0, nil },
+        UDec64ParseTC{ "12344", 0, false, 12344, nil },
+        UDec64ParseTC{ "12344.", 0, false, 12344, nil },
+        UDec64ParseTC{ "12344.0000", 0, false, 12344, nil },
+        UDec64ParseTC{ "12344.7000", 0, false, 12344, nil },
+        UDec64ParseTC{ "12344.7000", 0, true, 12345, nil },
+    }
+    for i, tc := range testCases {
+        result, err := ParseUDec64(tc.str, tc.precision, tc.rounding)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
+                     i, tc.str, tc.expected, tc.expError, result, err)
+        }
+        result, err = ParseUDec64Bytes([]byte(tc.str), tc.precision, tc.rounding)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: parse(%v)->%v,%v!=%v,%v",
+                     i, tc.str, tc.expected, tc.expError, result, err)
         }
     }
 }

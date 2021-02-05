@@ -267,8 +267,8 @@ func ParseUDec64(str string, precision uint, rounding bool) (UDec64, error) {
     commaIdx := strings.LastIndexByte(str, '.')
     if commaIdx==-1 {
         // comma not found
-        v, err := strconv.ParseUint(str, 10, 64)
-        if err!=nil { return UDec64(v), err }
+        v, err := ParseUIntDec(str, 64)
+        if err!=nil { return 0, err }
         chi, clo := bits.Mul64(v, uint64_powers[precision])
         if chi!=0 {
             return 0, strconv.ErrRange
@@ -279,7 +279,7 @@ func ParseUDec64(str string, precision uint, rounding bool) (UDec64, error) {
         //  more than in fraction
         realSlen := commaIdx+1+int(precision)
         s2 := str[:commaIdx] + str[commaIdx+1:realSlen]
-        v, err := strconv.ParseUint(s2, 10, 64)
+        v, err := ParseUIntDec(s2, 64)
         if err!=nil { return 0, err }
         // rounding
         if rounding && realSlen!=slen && str[realSlen]>='5' {
@@ -295,7 +295,7 @@ func ParseUDec64(str string, precision uint, rounding bool) (UDec64, error) {
     } else {
         // less than in fraction
         s2 := str[:commaIdx] + str[commaIdx+1:]
-        v, err := strconv.ParseUint(s2, 10, 64)
+        v, err := ParseUIntDec(s2, 64)
         if err!=nil { return 0, err }
         pow10ForVal := int(precision) - (slen-(commaIdx+1))
         chi, clo := bits.Mul64(v, uint64_powers[pow10ForVal])
@@ -308,6 +308,24 @@ func ParseUDec64(str string, precision uint, rounding bool) (UDec64, error) {
 }
 
 func ParseUIntDecBytes(s []byte, bits int) (uint64, error) {
+    maxVal := uint64(1<<bits)-1
+    v := uint64(0)
+    for _, c := range s {
+        vp := v
+        if c>='0' && c<='9' {
+            v = v*10 + uint64(c-'0')
+        } else {
+            return 0, strconv.ErrSyntax
+        }
+        v &= maxVal
+        if vp > v || v>maxVal {
+            return 0, strconv.ErrRange
+        }
+    }
+    return v, nil
+}
+
+func ParseUIntDec(s string, bits int) (uint64, error) {
     maxVal := uint64(1<<bits)-1
     v := uint64(0)
     for _, c := range s {
@@ -395,7 +413,7 @@ func ParseUDec64Bytes(str []byte, precision uint, rounding bool) (UDec64, error)
     if commaIdx==-1 {
         // comma not found
         v, err := ParseUIntDecBytes(str, 64)
-        if err!=nil { return UDec64(v), err }
+        if err!=nil { return 0, err }
         chi, clo := bits.Mul64(v, uint64_powers[precision])
         if chi!=0 {
             return 0, strconv.ErrRange
