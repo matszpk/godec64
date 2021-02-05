@@ -27,6 +27,38 @@ import (
     "testing"
 )
 
+type UDec64MulTC struct {
+    a, b UDec64
+    precision uint
+    rounding bool
+    expected UDec64
+}
+
+func TestUDec64Mul(t *testing.T) {
+    testCases := []UDec64MulTC {
+        UDec64MulTC{ 349884939232, 495983892892, 8, false, 1735372942245682 },
+        UDec64MulTC{ 349884939234, 495983892793, 8, false, 1735372941909215 },
+        UDec64MulTC{ 349884939232, 495983892892, 8, true, 1735372942245682 },
+        UDec64MulTC{ 349884939234, 495983892793, 8, true, 1735372941909216 },
+        UDec64MulTC{ 5489289235455, 443992839213, 10, false, 243720511291102 },
+        UDec64MulTC{ 5489289235455, 443992839213, 10, true, 243720511291102 },
+        UDec64MulTC{ 5489289235458, 443992839213, 10, false, 243720511291235 },
+        UDec64MulTC{ 5489289235458, 443992839213, 10, true, 243720511291236 },
+    }
+    for i, tc := range testCases {
+        a, b := tc.a, tc.b
+        result := tc.a.Mul(tc.b, tc.precision, tc.rounding)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: mul(%v,%v,%v,%v)->%v!=%v",
+                     i, tc.a, tc.b, tc.precision, tc.rounding, tc.expected, result)
+        }
+        if tc.a!=a || tc.b!=b {
+            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
+                     i, a, b, tc.a, tc.b)
+        }
+    }
+}
+
 type UDec64FmtTC struct {
     a UDec64
     precision uint
