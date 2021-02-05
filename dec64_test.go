@@ -196,3 +196,59 @@ func TestUDec64Parse(t *testing.T) {
         }
     }
 }
+
+type UDec64ToFloat64TC struct {
+    value UDec64
+    precision uint
+    expected float64
+}
+
+func TestUDec64ToFloat64(t *testing.T) {
+    testCases := []UDec64ToFloat64TC{
+        UDec64ToFloat64TC{ 0, 11, 0.0 },
+        UDec64ToFloat64TC{ 1, 11, 1.0*1e-11 },
+        UDec64ToFloat64TC{ 54930201, 11, 54930201.0*1e-11 },
+        UDec64ToFloat64TC{ 85959028918918968, 0, 85959028918918968.0 },
+        UDec64ToFloat64TC{ 85959028918918968, 11, 85959028918918968.0*1e-11 },
+        UDec64ToFloat64TC{ 85959028918918968, 17, 0.8595902891891898 },
+        UDec64ToFloat64TC{ 0xffffffffffffffff, 11, 18446744073709551615.0*1e-11 },
+    }
+    for i, tc := range testCases {
+        result := tc.value.ToFloat64(tc.precision)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: tofloat64(%v,%v)->%v!=%v",
+                     i, tc.value, tc.precision, tc.expected, result)
+        }
+    }
+}
+
+type Float64ToUDec64TC struct {
+    value float64
+    precision uint
+    expected UDec64
+    expError error
+}
+
+func TestFloat64ToUDec64(t *testing.T) {
+    testCases := []Float64ToUDec64TC{
+        Float64ToUDec64TC{ 0.0, 0, 0, nil },
+        Float64ToUDec64TC{ 1.0, 0, 1, nil },
+        Float64ToUDec64TC{ 1.7, 0, 1, nil },
+        Float64ToUDec64TC{ 145645677.18, 0, 145645677, nil },
+        Float64ToUDec64TC{ 3145645677.778, 0, 3145645677, nil },
+        Float64ToUDec64TC{ 187923786919586921.0, 0, 187923786919586912, nil },
+        Float64ToUDec64TC{ 11792378691958692154.0, 0, 11792378691958691840, nil },
+        Float64ToUDec64TC{ 145645677.18, 3, 145645677180, nil },
+        Float64ToUDec64TC{ 58590303.45539292211, 11, 0x514f750e8a1a8c00, nil },
+        Float64ToUDec64TC{ -1.0, 0, 0, strconv.ErrRange },
+        Float64ToUDec64TC{ 18446744073709551616.0, 0, 0, strconv.ErrRange },
+        Float64ToUDec64TC{ 18446744073709551617.0, 0, 0, strconv.ErrRange },
+    }
+    for i, tc := range testCases {
+        result, err := Float64ToUDec64(tc.value, tc.precision)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: toudec128(%v)->%v,%v!=%v,%v",
+                     i, tc.value, tc.expected, tc.expError, result, err)
+        }
+    }
+}
