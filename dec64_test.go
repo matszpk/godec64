@@ -59,6 +59,30 @@ func TestUDec64Mul(t *testing.T) {
     }
 }
 
+type UDec64DivTC struct {
+    a, b UDec64
+    precision uint
+    expected UDec64
+}
+
+func TestUDec64Div(t *testing.T) {
+    testCases := []UDec64DivTC {
+        UDec64DivTC { 243720511291235, 443992839213, 10, 5489289235457 },
+    }
+    for i, tc := range testCases {
+        a, b := tc.a, tc.b
+        result := tc.a.Div(tc.b, tc.precision)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: div(%v,%v,%v)->%v!=%v",
+                     i, tc.a, tc.b, tc.precision, tc.expected, result)
+        }
+        if tc.a!=a || tc.b!=b {
+            t.Errorf("Argument has been modified: %d: %v,%v!=%v,%v",
+                     i, a, b, tc.a, tc.b)
+        }
+    }
+}
+
 type UDec64FmtTC struct {
     a UDec64
     precision uint
