@@ -202,6 +202,9 @@ func (a UDec64) FormatBytes(precision uint, trimZeroes bool) []byte {
 func ParseUDec64(str string, precision uint, rounding bool) (UDec64, error) {
     slen := len(str)
     epos := strings.LastIndexByte(str, 'e')
+    if epos==-1 {
+        epos = strings.LastIndexByte(str, 'E')
+    }
     if epos!=-1 {
         // parse exponent
         if epos+1==slen {
@@ -347,6 +350,9 @@ func ParseUIntDec(s string, bits int) (uint64, error) {
 func ParseUDec64Bytes(str []byte, precision uint, rounding bool) (UDec64, error) {
     slen := len(str)
     epos := bytes.LastIndexByte(str, 'e')
+    if epos==-1 {
+        epos = bytes.LastIndexByte(str, 'E')
+    }
     if epos!=-1 {
         // parse exponent
         if epos+1==slen {
