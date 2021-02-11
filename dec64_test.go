@@ -214,6 +214,7 @@ func TestUDec64Parse(t *testing.T) {
         UDec64ParseTC{ "4251.43693331510191E-1", 15, false, 425143693331510191, nil },
         UDec64ParseTC{ "425143693.331510190e-6", 15, false, 425143693331510190, nil },
         UDec64ParseTC{ "0.01984593924556e-1", 15, false, 1984593924556, nil },
+        UDec64ParseTC{ "2.14231E-1", 6, false, 214231, nil },
         UDec64ParseTC{ ".01984593924556e-1", 15, false, 1984593924556, nil },
         UDec64ParseTC{ "0.1984593924556e-2", 15, false, 1984593924556, nil },
         UDec64ParseTC{ "00.1984593924556e-2", 15, false, 1984593924556, nil },

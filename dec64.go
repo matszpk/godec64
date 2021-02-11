@@ -24,6 +24,7 @@ package godec64
 
 import (
     "bytes"
+    "fmt"
     "math"
     "math/bits"
     "strconv"
@@ -232,7 +233,7 @@ func ParseUDec64(str string, precision uint, rounding bool) (UDec64, error) {
             //fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
             var sb strings.Builder
             // add zeroes
-            if newCommaPos<0 {
+            if newCommaPos<=0 {
                 sb.WriteRune('.')
                 for ; newCommaPos<0;  newCommaPos++ {
                     sb.WriteRune('0')
@@ -377,10 +378,10 @@ func ParseUDec64Bytes(str []byte, precision uint, rounding bool) (UDec64, error)
                 if str[i]=='.' { continue }
                 newCommaPos--
             } // skip first zero
-            //fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
+            fmt.Println("NewCommaPos:", newCommaPos, commaPos, exponent, i)
             var sb bytes.Buffer
             // add zeroes
-            if newCommaPos<0 {
+            if newCommaPos<=0 {
                 sb.WriteRune('.')
                 for ; newCommaPos<0;  newCommaPos++ {
                     sb.WriteRune('0')
