@@ -495,3 +495,20 @@ func Float64ToUDec64(a float64, precision uint) (UDec64, error) {
     }
     return UDec64(float64(a)*float64(uint64_powers[precision])), nil
 }
+
+func (a UDec64) Convert(srcPrec, destPrec uint, rounding bool) UDec64 {
+    if destPrec == srcPrec { return a }
+    if destPrec < srcPrec {
+        if !rounding {
+            return a / UDec64(uint64_powers[srcPrec - destPrec])
+        } else {
+            d := UDec64(uint64_powers[srcPrec - destPrec])
+            q := a / d
+            r := a - q*d
+            if r >= (d>>1) { q++ } // rounding
+            return q
+        }
+    } else { // destPrec > srcPrec
+        return a * UDec64(uint64_powers[destPrec - srcPrec])
+    }
+}

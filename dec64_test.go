@@ -311,3 +311,30 @@ func TestFloat64ToUDec64(t *testing.T) {
         }
     }
 }
+
+type ConvertUDec64TC struct {
+    value UDec64
+    srcPrecision uint
+    destPrecision uint
+    rounding bool
+    expected UDec64
+}
+
+func TestConvert(t *testing.T) {
+    testCases := []ConvertUDec64TC{
+        ConvertUDec64TC{ 145556, 1, 3, false, 14555600 },
+        ConvertUDec64TC{ 145556, 1, 3, true, 14555600 },
+        ConvertUDec64TC{ 145556, 1, 1, false, 145556 },
+        ConvertUDec64TC{ 145556, 1, 1, true, 145556 },
+        ConvertUDec64TC{ 145556, 3, 1, false, 1455 },
+        ConvertUDec64TC{ 145556, 3, 1, true, 1456 },
+    }
+    for i, tc := range testCases {
+        result := tc.value.Convert(tc.srcPrecision, tc.destPrecision, tc.rounding)
+        if tc.expected!=result {
+            t.Errorf("Result mismatch: %d: convert(%v,%v,%v,%v)->%v!=%v",
+                     i, tc.value, tc.srcPrecision, tc.destPrecision, tc.rounding,
+                     tc.expected, result)
+        }
+    }
+}
