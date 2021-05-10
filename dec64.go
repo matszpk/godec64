@@ -496,6 +496,19 @@ func Float64ToUDec64(a float64, precision uint) (UDec64, error) {
     return UDec64(float64(a)*float64(uint64_powers[precision])), nil
 }
 
+// convert float64 to UDec128
+func Float64ToUDec64R(a float64, precision uint, rounding bool) (UDec64, error) {
+    if math.IsNaN(a) || a >= 18446744073709551616.0 || a < 0.0 {
+        return 0, strconv.ErrRange
+    }
+    f := float64(a)*float64(uint64_powers[precision])
+    if rounding {
+        return UDec64(math.RoundToEven(f)), nil
+    } else {
+        return UDec64(math.Floor(f)), nil
+    }
+}
+
 func (a UDec64) Convert(srcPrec, destPrec uint, rounding bool) UDec64 {
     if destPrec == srcPrec { return a }
     if destPrec < srcPrec {

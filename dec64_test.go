@@ -312,6 +312,42 @@ func TestFloat64ToUDec64(t *testing.T) {
     }
 }
 
+type Float64ToUDec64RTC struct {
+    value float64
+    precision uint
+    round bool
+    expected UDec64
+    expError error
+}
+
+func TestFloat64ToUDec64R(t *testing.T) {
+    testCases := []Float64ToUDec64RTC{
+        Float64ToUDec64RTC{ 0.0, 0, false, 0, nil },
+        Float64ToUDec64RTC{ 1.0, 0, false, 1, nil },
+        Float64ToUDec64RTC{ 1.7, 0, false, 1, nil },
+        Float64ToUDec64RTC{ 1.7, 0, true, 2, nil },
+        Float64ToUDec64RTC{ 145645677.18, 0, false, 145645677, nil },
+        Float64ToUDec64RTC{ 3145645677.778, 0, false, 3145645677, nil },
+        Float64ToUDec64RTC{ 3145645677.778, 0, true, 3145645678, nil },
+        Float64ToUDec64RTC{ 187923786919586921.0, 0, false, 187923786919586912, nil },
+        Float64ToUDec64RTC{ 11792378691958692154.0, 0, false, 11792378691958691840, nil },
+        Float64ToUDec64RTC{ 145645677.18, 3, false, 145645677180, nil },
+        Float64ToUDec64RTC{ 145645677.1807, 3, false, 145645677180, nil },
+        Float64ToUDec64RTC{ 145645677.1807, 3, true, 145645677181, nil },
+        Float64ToUDec64RTC{ 58590303.45539292211, 11, false, 0x514f750e8a1a8c00, nil },
+        Float64ToUDec64RTC{ -1.0, 0, false, 0, strconv.ErrRange },
+        Float64ToUDec64RTC{ 18446744073709551616.0, 0, false, 0, strconv.ErrRange },
+        Float64ToUDec64RTC{ 18446744073709551617.0, 0, false, 0, strconv.ErrRange },
+    }
+    for i, tc := range testCases {
+        result, err := Float64ToUDec64R(tc.value, tc.precision, tc.round)
+        if tc.expected!=result || tc.expError!=err {
+            t.Errorf("Result mismatch: %d: toudec128(%v)->%v,%v!=%v,%v",
+                     i, tc.value, tc.expected, tc.expError, result, err)
+        }
+    }
+}
+
 type ConvertUDec64TC struct {
     value UDec64
     srcPrecision uint
