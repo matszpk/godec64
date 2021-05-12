@@ -27,13 +27,119 @@ import (
     "strings"
     "strconv"
     "unicode/utf8"
-    "github.com/matszpk/goint128"
 )
+
+// locale formatting info
+type LocFmt struct {
+    Comma, Sep1000, Sep1000_2 rune
+    Sep100and1000 bool
+    Digits []rune
+}
+
+var normalDigits []rune = []rune("0123456789")
+var arDigits []rune = []rune("٠١٢٣٤٥٦٧٨٩")
+var faDigits []rune = []rune("۰۱۲۳۴۵۶۷۸۹")
+var bnDigits []rune = []rune("০১২৩৪৫৬৭৮৯")
+var mrDigits []rune = []rune("०१२३४५६७८९")
+var myDigits []rune = []rune("၀၁၂၃၄၅၆၇၈၉")
+
+var defaultLocaleFormat LocFmt = LocFmt{ '.', ',', ',', false, normalDigits }
+
+var localeFormats map[string]LocFmt = map[string]LocFmt {
+    "af": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "am": LocFmt{ '.', ',', ',', false, normalDigits },
+    "ar": LocFmt{ '٫', '٬', '٬', false, arDigits },
+    "az": LocFmt{ ',', '.', '.', false, normalDigits },
+    "bg": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "bn": LocFmt{ '.', ',', ',', true, bnDigits },
+    "ca": LocFmt{ ',', '.', '.',false, normalDigits },
+    "cs": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "da": LocFmt{ ',', '.', '.', false, normalDigits },
+    "de": LocFmt{ ',', '.', '.', false, normalDigits },
+    "el": LocFmt{ ',', '.', '.', false, normalDigits },
+    "en": LocFmt{ '.', ',', ',', false, normalDigits },
+    "es": LocFmt{ ',', '.', '.', false, normalDigits },
+    "et": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "fa": LocFmt{ '٫', '٬', '٬', false, faDigits },
+    "fi": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "fil": LocFmt{ '.', ',', ',', false, normalDigits },
+    "fr": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "gu": LocFmt{ '.', ',', ',', true, normalDigits },
+    "he": LocFmt{ '.', ',', ',', false, normalDigits },
+    "hi": LocFmt{ '.', ',', ',', true, normalDigits },
+    "hr": LocFmt{ ',', '.', '.', false, normalDigits },
+    "hu": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "hy": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "id": LocFmt{ ',', '.', '.', false, normalDigits },
+    "is": LocFmt{ ',', '.', '.', false, normalDigits },
+    "it": LocFmt{ ',', '.', '.', false, normalDigits },
+    "ja": LocFmt{ '.', ',', ',', false, normalDigits },
+    "ka": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "kk": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "km": LocFmt{ ',', '.', '.', false, normalDigits },
+    "kn": LocFmt{ '.', ',', ',', false, normalDigits },
+    "ko": LocFmt{ '.', ',', ',', false, normalDigits },
+    "ky": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "lo": LocFmt{ ',', '.', '.', false, normalDigits },
+    "lt": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "lv": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "mk": LocFmt{ ',', '.', '.', false, normalDigits },
+    "ml": LocFmt{ '.', ',', ',', true, normalDigits },
+    "mn": LocFmt{ '.', ',', ',', false, normalDigits },
+    "mo": LocFmt{ ',', '.', '.', false, normalDigits },
+    "mr": LocFmt{ '.', ',', ',', true, mrDigits },
+    "ms": LocFmt{ '.', ',', ',', false, normalDigits },
+    "mul": LocFmt{ '.', ',', ',', false, normalDigits },
+    "my": LocFmt{ '.', ',', ',', false, myDigits },
+    "nb": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "ne": LocFmt{ '.', ',', ',', false, mrDigits },
+    "nl": LocFmt{ ',', '.', '.', false, normalDigits },
+    "no": LocFmt{ '.', ',', ',', false, normalDigits },
+    "pa": LocFmt{ '.', ',', ',', true, normalDigits },
+    "pl": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "pt": LocFmt{ ',', '.', '.', false, normalDigits },
+    "ro": LocFmt{ ',', '.', '.', false, normalDigits },
+    "ru": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "sh": LocFmt{ ',', '.', '.', false, normalDigits },
+    "si": LocFmt{ '.', ',', ',', false, normalDigits },
+    "sk": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "sl": LocFmt{ ',', '.', '.', false, normalDigits },
+    "sq": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "sr": LocFmt{ ',', '.', '.', false, normalDigits },
+    "sv": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "sw": LocFmt{ '.', ',', ',', false, normalDigits },
+    "ta": LocFmt{ '.', ',', ',', true, normalDigits },
+    "te": LocFmt{ '.', ',', ',', false, normalDigits },
+    "th": LocFmt{ '.', ',', ',', false, normalDigits },
+    "tl": LocFmt{ '.', ',', ',', false, normalDigits },
+    "tn": LocFmt{ '.', ',', ',', false, normalDigits },
+    "tr": LocFmt{ ',', '.', '.', false, normalDigits },
+    "uk": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "ur": LocFmt{ '.', ',', ',', false, normalDigits },
+    "uz": LocFmt{ ',', ' ', ' ', false, normalDigits },
+    "vi": LocFmt{ ',', '.', '.', false, normalDigits },
+    "zh": LocFmt{ '.', ',', ',', false, normalDigits },
+    "zu": LocFmt{ '.', ',', ',', false, normalDigits },
+}
+
+// get locale formating info
+func GetLocFmt(lang string) *LocFmt {
+    outLang := lang
+    langSlen := len(lang)
+    if langSlen>=3 && (lang[2]=='_' || lang[2]=='-') {
+        outLang = lang[0:2]
+    } else if langSlen>=4 && (lang[3]=='_' || lang[3]=='-') {
+        outLang = lang[0:3]
+    }
+    l, ok := localeFormats[outLang]
+    if !ok { l = defaultLocaleFormat }
+    return &l
+}
 
 // format 64-bit decimal fixed point including locale
 func (a UDec64) LocaleFormatNewBytes(lang string, precision, displayPrecision uint,
                                 trimZeroes, noSep1000 bool) []byte {
-    l := goint128.GetLocFmt(lang)
+    l := GetLocFmt(lang)
     s := a.FormatNewBytes(precision, displayPrecision, trimZeroes)
     slen := len(s)
     os := make([]byte, slen<<1) // optimization
@@ -102,7 +208,7 @@ func (a UDec64) LocaleFormatBytes(lang string, precision uint,
 // format 64-bit decimal fixed point including locale
 func (a UDec64) LocaleFormatNew(lang string, precision, displayPrecision uint,
                             trimZeroes, noSep1000 bool) string {
-    l := goint128.GetLocFmt(lang)
+    l := GetLocFmt(lang)
     s := a.FormatNewBytes(precision, displayPrecision, trimZeroes)
     var os strings.Builder
     slen := len(s)
@@ -155,7 +261,7 @@ func (a UDec64) LocaleFormat(lang string, precision uint,
 
 // parse decimal fixed point from string and return value and error (nil if no error)
 func LocaleParseUDec64(lang, str string, precision uint, rounding bool) (UDec64, error) {
-    l := goint128.GetLocFmt(lang)
+    l := GetLocFmt(lang)
     if len(str)==0 { return 0, strconv.ErrSyntax }
     
     os := make([]byte, 0, len(str))
@@ -186,7 +292,7 @@ func LocaleParseUDec64(lang, str string, precision uint, rounding bool) (UDec64,
 // parse decimal fixed point from string and return value and error (nil if no error)
 func LocaleParseUDec64Bytes(lang string, strInput []byte,
                              precision uint, rounding bool) (UDec64, error) {
-    l := goint128.GetLocFmt(lang)
+    l := GetLocFmt(lang)
     if len(strInput)==0 { return 0, strconv.ErrSyntax }
     
     os := make([]byte, 0, len(strInput))
